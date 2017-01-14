@@ -1,10 +1,16 @@
-var geocode = require('./geocode.js'); //returns a function that geocodes addresses, returns coordinates
+// var geocode = require('./geocode.js'); //returns a function that geocodes addresses, returns coordinates
 
-var coordinates = geocode([
-						'Piccadilly Circus Tube Station, London',
-						'Albany Piccadilly Mayfair London, W1J',
-						'Burlington Arcade Burlington House 0BG Piccadilly, London W1J'
-				  	]); //pass addresses and waypoints to the function
+// var coordinates = geocode([
+// 						'Piccadilly Circus Tube Station, London',
+// 						'Albany Piccadilly Mayfair London, W1J',
+// 						'Burlington Arcade Burlington House 0BG Piccadilly, London W1J'
+// 				  	]); //pass addresses and waypoints to the function
+
+var process_gpx = require('./process_gpx.js'); 
+
+var coordinates = process_gpx('house_to_tube.gpx'); 
+
+console.log(coordinates); 
 
 // var get_directions = require('directions.js'); //returns a function that returns turn by turn directions
 

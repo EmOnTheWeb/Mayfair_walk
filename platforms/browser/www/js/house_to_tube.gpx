@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx version="1.1" creator="http://www.geoplaner.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<rte>
+<name>house to tube </name>
+<rtept lat="51.53126" lon="-0.16802">
+<name>WP01-A</name>
+</rtept>
+<rtept lat="51.53232" lon="-0.16932">
+<name>WP02-B</name>
+</rtept>
+<rtept lat="51.53344" lon="-0.17067">
+<name>WP03-C</name>
+</rtept>
+<rtept lat="51.53465" lon="-0.17215">
+<name>WP04-D</name>
+</rtept>
+<rtept lat="51.53506" lon="-0.17263">
+<name>WP05-E</name>
+</rtept>
+<rtept lat="51.53469" lon="-0.17356">
+<name>WP06-F</name>
+</rtept>
+<rtept lat="51.53448" lon="-0.17404">
+<name>WP07-G</name>
+</rtept>
+</rte>
+</gpx>
