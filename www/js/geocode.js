@@ -7,10 +7,11 @@ module.exports = function(address_array) { //takes in array of strings
 
 	for(var i=0; i<address_array.length; i++) {
 		client.geocodeForward(address_array[i], {
+			country:'GB'
 			// dataset:'mapbox.places-permanent' (need special permission for batch geocoding)
-		},function(err, res) {
+		}, function(err, res) {
 	  		// res is the geocoding result as parsed JSON
-	  		console.log(res); 
+	  		console.table(res); 
 		});
 	}
 }
