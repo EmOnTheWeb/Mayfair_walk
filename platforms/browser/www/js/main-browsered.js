@@ -1,15 +1,19 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-module.exports = function(array) { //takes in array of strings
+module.exports = function(address_array) { //takes in array of strings
 
 	var MapboxClient = require('mapbox/lib/services/geocoding'); 
 	var client = new MapboxClient('pk.eyJ1IjoiZW1pbGllZGFubmVuYmVyZyIsImEiOiJjaXhmOTB6ZnowMDAwMnVzaDVkcnpsY2M1In0.33yDwUq670jHD8flKjzqxg');
 
-	client.geocodeForward('Paris,France', {
-		// dataset:'mapbox.places-permanent'
-	},function(err, res) {
-  		// res is the geocoding result as parsed JSON
-  		console.log(res); 
-	});
+	var coordinate_array = []; 
+
+	for(var i=0; i<address_array.length; i++) {
+		client.geocodeForward(address_array[i], {
+			// dataset:'mapbox.places-permanent' (need special permission for batch geocoding)
+		},function(err, res) {
+	  		// res is the geocoding result as parsed JSON
+	  		console.log(res); 
+		});
+	}
 }
 
 
