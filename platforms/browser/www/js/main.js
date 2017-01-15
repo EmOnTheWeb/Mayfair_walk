@@ -10,13 +10,16 @@ var processGPX = require('./process_gpx.js');
 
 processGPX('house_to_tube.gpx',retrieveCoordinates); 
 
-
 function retrieveCoordinates(coordinates) {
 	
-	// var getDirections = require('directions.js'); 
+	var getDirections = require('./directions.js'); 
+	
+	getDirections(coordinates,function(directions) {
 
-	// var turn_by_turn = getDirections(coordinates); 
+		console.log(directions); 
 
+	}); 
+	// var turn_by_turn = getDirections(coordinates);
 }; 
 
 
