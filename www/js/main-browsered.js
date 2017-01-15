@@ -7,33 +7,46 @@
 // 						'Burlington Arcade Burlington House 0BG Piccadilly, London W1J'
 // 				  	]); //pass addresses and waypoints to the function
 
-var process_gpx = require('./process_gpx.js'); 
+var processGPX = require('./process_gpx.js'); 
 
-var coordinates = process_gpx('house_to_tube.gpx'); 
+processGPX('house_to_tube.gpx',retrieveCoordinates); 
 
-console.log(coordinates); 
+
+function retrieveCoordinates(coordinates) {
+	
+	// var getDirections = require('directions.js'); 
+
+	// var turn_by_turn = getDirections(coordinates); 
+
+}; 
+
+
+
 
 // var get_directions = require('directions.js'); //returns a function that returns turn by turn directions
 
 // var turn_by_turn = get_directions(coordinates); //get turn by turn directions with geocoded coordinates; 
 
 },{"./process_gpx.js":2}],2:[function(require,module,exports){
-module.exports = function(gpx_file) {
-    //get xml out of file 
-   
+//get gpx file contents 
+module.exports = function (gpx_file, callback) {
+
     var xhr = new XMLHttpRequest();
     
-    xhr.onreadystatechange = function() {
+    xhr.open('GET', './gpx/'+gpx_file, true);
+    xhr.send(null);  
 
+    xhr.onreadystatechange = function() {
         if (xhr.readyState == XMLHttpRequest.DONE) { 
-           var coordinates = getCoordinates(xhr.responseText); // the rest of the code ends and returns before onready state change fires done
-           return coordinates; 
+
+            var coordinates = getCoordinates(xhr.responseText);
+
+            if(typeof callback=='function') {   
+                callback(coordinates); 
+            }
         }
     }
-    xhr.open('GET', './js/'+gpx_file, true);
-    xhr.send(null);
-
-}
+}; 
 
 //read returned contents of file into an array of coordinates
 function getCoordinates(xml_file) {
@@ -52,6 +65,7 @@ function getCoordinates(xml_file) {
                 
         coordinates_array.push([lat, long]);
     } 
+    
     return coordinates_array; 
 }
 },{}]},{},[1]);

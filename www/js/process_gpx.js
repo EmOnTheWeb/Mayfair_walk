@@ -1,19 +1,22 @@
-module.exports = function(gpx_file) {
-    //get xml out of file 
-   
+//get gpx file contents 
+module.exports = function (gpx_file, callback) {
+
     var xhr = new XMLHttpRequest();
     
-    xhr.onreadystatechange = function() {
+    xhr.open('GET', './gpx/'+gpx_file, true);
+    xhr.send(null);  
 
+    xhr.onreadystatechange = function() {
         if (xhr.readyState == XMLHttpRequest.DONE) { 
-           var coordinates = getCoordinates(xhr.responseText); // the rest of the code ends and returns before onready state change fires done
-           return coordinates; 
+
+            var coordinates = getCoordinates(xhr.responseText);
+
+            if(typeof callback=='function') {   
+                callback(coordinates); 
+            }
         }
     }
-    xhr.open('GET', './js/'+gpx_file, true);
-    xhr.send(null);
-
-}
+}; 
 
 //read returned contents of file into an array of coordinates
 function getCoordinates(xml_file) {
@@ -32,5 +35,6 @@ function getCoordinates(xml_file) {
                 
         coordinates_array.push([lat, long]);
     } 
+    
     return coordinates_array; 
 }

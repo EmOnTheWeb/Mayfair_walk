@@ -6,11 +6,21 @@
 // 						'Burlington Arcade Burlington House 0BG Piccadilly, London W1J'
 // 				  	]); //pass addresses and waypoints to the function
 
-var process_gpx = require('./process_gpx.js'); 
+var processGPX = require('./process_gpx.js'); 
 
-var coordinates = process_gpx('house_to_tube.gpx'); 
+processGPX('house_to_tube.gpx',retrieveCoordinates); 
 
-console.log(coordinates); 
+
+function retrieveCoordinates(coordinates) {
+	
+	// var getDirections = require('directions.js'); 
+
+	// var turn_by_turn = getDirections(coordinates); 
+
+}; 
+
+
+
 
 // var get_directions = require('directions.js'); //returns a function that returns turn by turn directions
 
