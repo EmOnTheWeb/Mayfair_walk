@@ -8,9 +8,7 @@
 
 var processGPX = require('./process_gpx.js'); 
 
-processGPX('house_to_tube.gpx',retrieveCoordinates); 
-
-function retrieveCoordinates(coordinates) {
+processGPX('house_to_tube.gpx', function (coordinates) {
 	
 	var getDirections = require('./directions.js'); 
 	
@@ -20,7 +18,9 @@ function retrieveCoordinates(coordinates) {
 
 	}); 
 	// var turn_by_turn = getDirections(coordinates);
-}; 
+}); 
+
+
 
 
 

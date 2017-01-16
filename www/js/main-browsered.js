@@ -4,23 +4,26 @@ module.exports = function(coordinates,callback) {
 	var MapboxClient = require('mapbox/lib/services/directions'); 
 	var client = new MapboxClient('pk.eyJ1IjoiZW1pbGllZGFubmVuYmVyZyIsImEiOiJjaXhmOTB6ZnowMDAwMnVzaDVkcnpsY2M1In0.33yDwUq670jHD8flKjzqxg');
 
-	client.getDirections([
-		  { latitude: 33.6875431, longitude: -95.4431142 },
-		  { latitude: 33.6875431, longitude: -95.4831142 }
-		], {
+	var array_lat_long = []; 
+	for(var i=0; i<coordinates.length; i++) {
+
+		var lat= Number(coordinates[i][0]); 
+		var long= Number(coordinates[i][1]); 
+
+		array_lat_long.push({ latitude: lat, longitude: long}); 
+
+	}
+	
+	client.getDirections(array_lat_long, {
 		  profile: 'mapbox.walking',
-		  instructions: 'html',
 		  alternatives: false,
-		  geometry: 'polyline'
 		}, function(err, results) {
-		   		
-		   		if(typeof callback == 'function') {
-		   			callback(results); 
-		   		}
+		   		if(err===null) {
+			   		if(typeof callback == 'function') {
+			   			callback(results); 
+			   		}
+			   	}
 		});
-
-
-
 }
 },{"mapbox/lib/services/directions":11}],2:[function(require,module,exports){
 // var geocode = require('./geocode.js'); //returns a function that geocodes addresses, returns coordinates
@@ -33,9 +36,7 @@ module.exports = function(coordinates,callback) {
 
 var processGPX = require('./process_gpx.js'); 
 
-processGPX('house_to_tube.gpx',retrieveCoordinates); 
-
-function retrieveCoordinates(coordinates) {
+processGPX('house_to_tube.gpx', function (coordinates) {
 	
 	var getDirections = require('./directions.js'); 
 	
@@ -45,7 +46,9 @@ function retrieveCoordinates(coordinates) {
 
 	}); 
 	// var turn_by_turn = getDirections(coordinates);
-}; 
+}); 
+
+
 
 
 
