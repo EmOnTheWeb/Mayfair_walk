@@ -25,41 +25,37 @@ module.exports = function(coordinates,callback) {
 			   	}
 		});
 }
-},{"mapbox/lib/services/directions":12}],2:[function(require,module,exports){
-// var geocode = require('./geocode.js'); //returns a function that geocodes addresses, returns coordinates
+},{"mapbox/lib/services/directions":13}],2:[function(require,module,exports){
+// Wait for device API libraries to load
+document.addEventListener("deviceready", onDeviceReady, false);
 
-// var coordinates = geocode([
-// 						'Piccadilly Circus Tube Station, London',
-// 						'Albany Piccadilly Mayfair London, W1J',
-// 						'Burlington Arcade Burlington House 0BG Piccadilly, London W1J'
-// 				  	]); //pass addresses and waypoints to the function
+function onDeviceReady() { 
 
-var processGPX = require('./process_gpx.js'); 
+	var processGPX = require('./process_gpx.js'); 
 
-processGPX('route.gpx', function (coordinates) {
-	
-	var getDirections = require('./directions.js'); 
-	
-	getDirections(coordinates,function(directions) {
+	var gpxFile = 'route.gpx'; 
 
-		// detect when person is at start 
-		var saveDirectionInfo = require('./save_directions.js')
-		saveDirectionInfo(directions); 
+	processGPX(gpxFile, function (coordinates) {
+		
+		var getDirections = require('./directions.js'); 
+		
+		getDirections(coordinates,function(directions) {
 
+			// detect when person is at start 
+			var saveDirectionInfo = require('./save_directions.js')
+			stepsData = saveDirectionInfo(directions,gpxFile); 
+			
+			var listenForCoordinates = require('./track_coordinates.js'); //coordinates are in [longitude, latitude] for google maps lat long goes the other way!
+			listenForCoordinates(stepsData); 
+
+		}); 
+		// var turn_by_turn = getDirections(coordinates);
 	}); 
-	// var turn_by_turn = getDirections(coordinates);
-}); 
+}
 
 
 
-
-
-
-// var get_directions = require('directions.js'); //returns a function that returns turn by turn directions
-
-// var turn_by_turn = get_directions(coordinates); //get turn by turn directions with geocoded coordinates; 
-
-},{"./directions.js":1,"./process_gpx.js":3,"./save_directions.js":4}],3:[function(require,module,exports){
+},{"./directions.js":1,"./process_gpx.js":3,"./save_directions.js":4,"./track_coordinates.js":5}],3:[function(require,module,exports){
 //get gpx file contents 
 module.exports = function (gpx_file, callback) {
 
@@ -101,11 +97,12 @@ function getCoordinates(xml_file) {
     return coordinates_array; 
 }
 },{}],4:[function(require,module,exports){
-module.exports = function(directionObject) {
+module.exports = function(directionObject, fileName) {
 
 	var route = directionObject['routes'][0]; 
 	var steps = route['steps'];
 
+	var stepsRelevantData = []; 
 	for (var i= 0; i< steps.length; i++) {
 
 		var currentStep=steps[i]; 
@@ -114,15 +111,47 @@ module.exports = function(directionObject) {
 		var distance=currentStep['distance']; 
 		var instruction=currentStep['maneuver']['instruction']; 
 		var type=currentStep['maneuver']['type']; 
-		var coordinates=currentStep['maneuver']['location']['coordinates']; 
+		var coordinates=currentStep['maneuver']['location']['coordinates']; //coordinates are in [longitude, latitude] for google maps lat long goes the other way!
+
+		stepsRelevantData.push({coordinates:coordinates, distance:distance, direction:direction, type:type, instruction: instruction})
 	}
-
-
-	console.log(steps); 
-
-
+	return stepsRelevantData; 
 }
 },{}],5:[function(require,module,exports){
+module.exports = function(coordinatesData) {
+
+	//start tracking
+
+	var watch_id= navigator.geolocation.watchPosition(
+
+        //success
+        function(position) {
+                //check against route waypoints 
+            var lat = position.coords.latitude; 
+            var long = position.coords.longitude; 
+            console.log(position); 
+           //  //round numbers to 5 decimals 
+           //  lat = lat.toFixed(5); 
+           //  long = long.toFixed(5); 
+
+           // var waypoint = isClose(lat,long); //returns false if not close to anywhere, or waypoint number its closest to if close to a waypoint.
+           // if(waypoint !== false) {
+           //  //play corresponding audio 
+           //      audio_elem = 'waypoint_'+waypoint; 
+           //      playAudio(audio_elem);  
+           // } 
+           //  // if(waypoint) {
+           //  route_data.push(position); 
+        },
+        //error
+        function(error) {
+                console.log('couldnt get coordinates!!!'); 
+        },
+        //settings
+        { frequency: 10000, enableHighAccuracy: true}); 
+console.log('hi'); 
+}
+},{}],6:[function(require,module,exports){
 'use strict';
 
 if (typeof Promise === 'undefined') {
@@ -157,7 +186,7 @@ var callbackify = interceptor({
 
 module.exports = callbackify;
 
-},{"../vendor/promise":15,"rest/interceptor":21}],6:[function(require,module,exports){
+},{"../vendor/promise":16,"rest/interceptor":22}],7:[function(require,module,exports){
 'use strict';
 
 if (typeof Promise === 'undefined') {
@@ -184,7 +213,7 @@ module.exports = function(config) {
     .wrap(callbackify);
 };
 
-},{"../vendor/promise":15,"./callbackify":5,"./standard_response":13,"rest":17,"rest/interceptor/defaultRequest":22,"rest/interceptor/errorCode":23,"rest/interceptor/mime":24,"rest/interceptor/params":25,"rest/interceptor/pathPrefix":26,"rest/interceptor/template":27}],7:[function(require,module,exports){
+},{"../vendor/promise":16,"./callbackify":6,"./standard_response":14,"rest":18,"rest/interceptor/defaultRequest":23,"rest/interceptor/errorCode":24,"rest/interceptor/mime":25,"rest/interceptor/params":26,"rest/interceptor/pathPrefix":27,"rest/interceptor/template":28}],8:[function(require,module,exports){
 // We keep all of the constants that declare endpoints in one
 // place, so that we could conceivably update this for API layout
 // revisions.
@@ -227,7 +256,7 @@ module.exports.API_STYLES_SPRITE_DELETE_ICON = '/styles/v1/{owner}/{styleid}/spr
 
 module.exports.API_STYLES_FONT_GLYPH_RANGES = '/fonts/v1/{owner}/{font}/{start}-{end}.pbf'
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 var invariantLocation = require('./invariant_location');
@@ -251,7 +280,7 @@ function formatPoints(waypoints) {
 
 module.exports = formatPoints;
 
-},{"./invariant_location":10}],9:[function(require,module,exports){
+},{"./invariant_location":11}],10:[function(require,module,exports){
 'use strict';
 
 var b64 = require('rest/util/base64');
@@ -285,7 +314,7 @@ function getUser(token) {
 
 module.exports = getUser;
 
-},{"rest/util/base64":36}],10:[function(require,module,exports){
+},{"rest/util/base64":37}],11:[function(require,module,exports){
 'use strict';
 
 var invariant = require('../vendor/invariant');
@@ -310,7 +339,7 @@ function invariantLocation(location) {
 
 module.exports = invariantLocation;
 
-},{"../vendor/invariant":14}],11:[function(require,module,exports){
+},{"../vendor/invariant":15}],12:[function(require,module,exports){
 'use strict';
 
 var invariant = require('../vendor/invariant');
@@ -368,7 +397,7 @@ function makeService(name) {
 
 module.exports = makeService;
 
-},{"../vendor/invariant":14,"./client":6,"./constants":7,"./get_user":9}],12:[function(require,module,exports){
+},{"../vendor/invariant":15,"./client":7,"./constants":8,"./get_user":10}],13:[function(require,module,exports){
 'use strict';
 
 var invariant = require('../../vendor/invariant'),
@@ -495,7 +524,7 @@ MapboxDirections.prototype.getDirections = function(waypoints, options, callback
 
 module.exports = MapboxDirections;
 
-},{"../../vendor/invariant":14,"../constants":7,"../format_points":8,"../make_service":11}],13:[function(require,module,exports){
+},{"../../vendor/invariant":15,"../constants":8,"../format_points":9,"../make_service":12}],14:[function(require,module,exports){
 var interceptor = require('rest/interceptor');
 
 var standardResponse = interceptor({
@@ -515,7 +544,7 @@ function transform(response) {
 
 module.exports = standardResponse;
 
-},{"rest/interceptor":21}],14:[function(require,module,exports){
+},{"rest/interceptor":22}],15:[function(require,module,exports){
 (function (process){
 /*
  * Copyright 2013-2015, Facebook, Inc.
@@ -572,13 +601,13 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 
 }).call(this,require('_process'))
-},{"_process":44}],15:[function(require,module,exports){
+},{"_process":45}],16:[function(require,module,exports){
 (function (process,global){
 !function(t){"object"==typeof exports?module.exports=t():"function"==typeof define&&define.amd?define(t):"undefined"!=typeof window?window.Promise=t():"undefined"!=typeof global?global.Promise=t():"undefined"!=typeof self&&(self.Promise=t())}(function(){var t;return function e(t,n,o){function r(u,c){if(!n[u]){if(!t[u]){var f="function"==typeof require&&require;if(!c&&f)return f(u,!0);if(i)return i(u,!0);throw new Error("Cannot find module '"+u+"'")}var s=n[u]={exports:{}};t[u][0].call(s.exports,function(e){var n=t[u][1][e];return r(n?n:e)},s,s.exports,e,t,n,o)}return n[u].exports}for(var i="function"==typeof require&&require,u=0;u<o.length;u++)r(o[u]);return r}({1:[function(t,e,n){var o=t("../lib/decorators/unhandledRejection"),r=o(t("../lib/Promise"));e.exports="undefined"!=typeof global?global.Promise=r:"undefined"!=typeof self?self.Promise=r:r},{"../lib/Promise":2,"../lib/decorators/unhandledRejection":4}],2:[function(e,n,o){!function(t){"use strict";t(function(t){var e=t("./makePromise"),n=t("./Scheduler"),o=t("./env").asap;return e({scheduler:new n(o)})})}("function"==typeof t&&t.amd?t:function(t){n.exports=t(e)})},{"./Scheduler":3,"./env":5,"./makePromise":7}],3:[function(e,n,o){!function(t){"use strict";t(function(){function t(t){this._async=t,this._running=!1,this._queue=this,this._queueLen=0,this._afterQueue={},this._afterQueueLen=0;var e=this;this.drain=function(){e._drain()}}return t.prototype.enqueue=function(t){this._queue[this._queueLen++]=t,this.run()},t.prototype.afterQueue=function(t){this._afterQueue[this._afterQueueLen++]=t,this.run()},t.prototype.run=function(){this._running||(this._running=!0,this._async(this.drain))},t.prototype._drain=function(){for(var t=0;t<this._queueLen;++t)this._queue[t].run(),this._queue[t]=void 0;for(this._queueLen=0,this._running=!1,t=0;t<this._afterQueueLen;++t)this._afterQueue[t].run(),this._afterQueue[t]=void 0;this._afterQueueLen=0},t})}("function"==typeof t&&t.amd?t:function(t){n.exports=t()})},{}],4:[function(e,n,o){!function(t){"use strict";t(function(t){function e(t){throw t}function n(){}var o=t("../env").setTimer,r=t("../format");return function(t){function i(t){t.handled||(l.push(t),a("Potentially unhandled rejection ["+t.id+"] "+r.formatError(t.value)))}function u(t){var e=l.indexOf(t);e>=0&&(l.splice(e,1),h("Handled previous rejection ["+t.id+"] "+r.formatObject(t.value)))}function c(t,e){p.push(t,e),null===d&&(d=o(f,0))}function f(){for(d=null;p.length>0;)p.shift()(p.shift())}var s,a=n,h=n;"undefined"!=typeof console&&(s=console,a="undefined"!=typeof s.error?function(t){s.error(t)}:function(t){s.log(t)},h="undefined"!=typeof s.info?function(t){s.info(t)}:function(t){s.log(t)}),t.onPotentiallyUnhandledRejection=function(t){c(i,t)},t.onPotentiallyUnhandledRejectionHandled=function(t){c(u,t)},t.onFatalRejection=function(t){c(e,t.value)};var p=[],l=[],d=null;return t}})}("function"==typeof t&&t.amd?t:function(t){n.exports=t(e)})},{"../env":5,"../format":6}],5:[function(e,n,o){!function(t){"use strict";t(function(t){function e(){return"undefined"!=typeof process&&"[object process]"===Object.prototype.toString.call(process)}function n(){return"function"==typeof MutationObserver&&MutationObserver||"function"==typeof WebKitMutationObserver&&WebKitMutationObserver}function o(t){function e(){var t=n;n=void 0,t()}var n,o=document.createTextNode(""),r=new t(e);r.observe(o,{characterData:!0});var i=0;return function(t){n=t,o.data=i^=1}}var r,i="undefined"!=typeof setTimeout&&setTimeout,u=function(t,e){return setTimeout(t,e)},c=function(t){return clearTimeout(t)},f=function(t){return i(t,0)};if(e())f=function(t){return process.nextTick(t)};else if(r=n())f=o(r);else if(!i){var s=t,a=s("vertx");u=function(t,e){return a.setTimer(e,t)},c=a.cancelTimer,f=a.runOnLoop||a.runOnContext}return{setTimer:u,clearTimer:c,asap:f}})}("function"==typeof t&&t.amd?t:function(t){n.exports=t(e)})},{}],6:[function(e,n,o){!function(t){"use strict";t(function(){function t(t){var n="object"==typeof t&&null!==t&&(t.stack||t.message)?t.stack||t.message:e(t);return t instanceof Error?n:n+" (WARNING: non-Error used)"}function e(t){var e=String(t);return"[object Object]"===e&&"undefined"!=typeof JSON&&(e=n(t,e)),e}function n(t,e){try{return JSON.stringify(t)}catch(n){return e}}return{formatError:t,formatObject:e,tryStringify:n}})}("function"==typeof t&&t.amd?t:function(t){n.exports=t()})},{}],7:[function(e,n,o){!function(t){"use strict";t(function(){return function(t){function e(t,e){this._handler=t===_?e:n(t)}function n(t){function e(t){r.resolve(t)}function n(t){r.reject(t)}function o(t){r.notify(t)}var r=new b;try{t(e,n,o)}catch(i){n(i)}return r}function o(t){return S(t)?t:new e(_,new x(y(t)))}function r(t){return new e(_,new x(new P(t)))}function i(){return $}function u(){return new e(_,new b)}function c(t,e){var n=new b(t.receiver,t.join().context);return new e(_,n)}function f(t){return a(K,null,t)}function s(t,e){return a(F,t,e)}function a(t,n,o){function r(e,r,u){u.resolved||h(o,i,e,t(n,r,e),u)}function i(t,e,n){a[t]=e,0===--s&&n.become(new q(a))}for(var u,c="function"==typeof n?r:i,f=new b,s=o.length>>>0,a=new Array(s),p=0;p<o.length&&!f.resolved;++p)u=o[p],void 0!==u||p in o?h(o,c,p,u,f):--s;return 0===s&&f.become(new q(a)),new e(_,f)}function h(t,e,n,o,r){if(U(o)){var i=m(o),u=i.state();0===u?i.fold(e,n,void 0,r):u>0?e(n,i.value,r):(r.become(i),p(t,n+1,i))}else e(n,o,r)}function p(t,e,n){for(var o=e;o<t.length;++o)l(y(t[o]),n)}function l(t,e){if(t!==e){var n=t.state();0===n?t.visit(t,void 0,t._unreport):0>n&&t._unreport()}}function d(t){return"object"!=typeof t||null===t?r(new TypeError("non-iterable passed to race()")):0===t.length?i():1===t.length?o(t[0]):v(t)}function v(t){var n,o,r,i=new b;for(n=0;n<t.length;++n)if(o=t[n],void 0!==o||n in t){if(r=y(o),0!==r.state()){i.become(r),p(t,n+1,r);break}r.visit(i,i.resolve,i.reject)}return new e(_,i)}function y(t){return S(t)?t._handler.join():U(t)?j(t):new q(t)}function m(t){return S(t)?t._handler.join():j(t)}function j(t){try{var e=t.then;return"function"==typeof e?new g(e,t):new q(t)}catch(n){return new P(n)}}function _(){}function w(){}function b(t,n){e.createContext(this,n),this.consumers=void 0,this.receiver=t,this.handler=void 0,this.resolved=!1}function x(t){this.handler=t}function g(t,e){b.call(this),I.enqueue(new E(t,e,this))}function q(t){e.createContext(this),this.value=t}function P(t){e.createContext(this),this.id=++Y,this.value=t,this.handled=!1,this.reported=!1,this._report()}function R(t,e){this.rejection=t,this.context=e}function C(t){this.rejection=t}function O(){return new P(new TypeError("Promise cycle"))}function T(t,e){this.continuation=t,this.handler=e}function Q(t,e){this.handler=e,this.value=t}function E(t,e,n){this._then=t,this.thenable=e,this.resolver=n}function L(t,e,n,o,r){try{t.call(e,n,o,r)}catch(i){o(i)}}function k(t,e,n,o){this.f=t,this.z=e,this.c=n,this.to=o,this.resolver=X,this.receiver=this}function S(t){return t instanceof e}function U(t){return("object"==typeof t||"function"==typeof t)&&null!==t}function H(t,n,o,r){return"function"!=typeof t?r.become(n):(e.enterContext(n),W(t,n.value,o,r),void e.exitContext())}function N(t,n,o,r,i){return"function"!=typeof t?i.become(o):(e.enterContext(o),z(t,n,o.value,r,i),void e.exitContext())}function M(t,n,o,r,i){return"function"!=typeof t?i.notify(n):(e.enterContext(o),A(t,n,r,i),void e.exitContext())}function F(t,e,n){try{return t(e,n)}catch(o){return r(o)}}function W(t,e,n,o){try{o.become(y(t.call(n,e)))}catch(r){o.become(new P(r))}}function z(t,e,n,o,r){try{t.call(o,e,n,r)}catch(i){r.become(new P(i))}}function A(t,e,n,o){try{o.notify(t.call(n,e))}catch(r){o.notify(r)}}function J(t,e){e.prototype=V(t.prototype),e.prototype.constructor=e}function K(t,e){return e}function D(){}function G(){return"undefined"!=typeof process&&null!==process&&"function"==typeof process.emit?function(t,e){return"unhandledRejection"===t?process.emit(t,e.value,e):process.emit(t,e)}:"undefined"!=typeof self&&"function"==typeof CustomEvent?function(t,e,n){var o=!1;try{var r=new n("unhandledRejection");o=r instanceof n}catch(i){}return o?function(t,o){var r=new n(t,{detail:{reason:o.value,key:o},bubbles:!1,cancelable:!0});return!e.dispatchEvent(r)}:t}(D,self,CustomEvent):D}var I=t.scheduler,B=G(),V=Object.create||function(t){function e(){}return e.prototype=t,new e};e.resolve=o,e.reject=r,e.never=i,e._defer=u,e._handler=y,e.prototype.then=function(t,e,n){var o=this._handler,r=o.join().state();if("function"!=typeof t&&r>0||"function"!=typeof e&&0>r)return new this.constructor(_,o);var i=this._beget(),u=i._handler;return o.chain(u,o.receiver,t,e,n),i},e.prototype["catch"]=function(t){return this.then(void 0,t)},e.prototype._beget=function(){return c(this._handler,this.constructor)},e.all=f,e.race=d,e._traverse=s,e._visitRemaining=p,_.prototype.when=_.prototype.become=_.prototype.notify=_.prototype.fail=_.prototype._unreport=_.prototype._report=D,_.prototype._state=0,_.prototype.state=function(){return this._state},_.prototype.join=function(){for(var t=this;void 0!==t.handler;)t=t.handler;return t},_.prototype.chain=function(t,e,n,o,r){this.when({resolver:t,receiver:e,fulfilled:n,rejected:o,progress:r})},_.prototype.visit=function(t,e,n,o){this.chain(X,t,e,n,o)},_.prototype.fold=function(t,e,n,o){this.when(new k(t,e,n,o))},J(_,w),w.prototype.become=function(t){t.fail()};var X=new w;J(_,b),b.prototype._state=0,b.prototype.resolve=function(t){this.become(y(t))},b.prototype.reject=function(t){this.resolved||this.become(new P(t))},b.prototype.join=function(){if(!this.resolved)return this;for(var t=this;void 0!==t.handler;)if(t=t.handler,t===this)return this.handler=O();return t},b.prototype.run=function(){var t=this.consumers,e=this.handler;this.handler=this.handler.join(),this.consumers=void 0;for(var n=0;n<t.length;++n)e.when(t[n])},b.prototype.become=function(t){this.resolved||(this.resolved=!0,this.handler=t,void 0!==this.consumers&&I.enqueue(this),void 0!==this.context&&t._report(this.context))},b.prototype.when=function(t){this.resolved?I.enqueue(new T(t,this.handler)):void 0===this.consumers?this.consumers=[t]:this.consumers.push(t)},b.prototype.notify=function(t){this.resolved||I.enqueue(new Q(t,this))},b.prototype.fail=function(t){var e="undefined"==typeof t?this.context:t;this.resolved&&this.handler.join().fail(e)},b.prototype._report=function(t){this.resolved&&this.handler.join()._report(t)},b.prototype._unreport=function(){this.resolved&&this.handler.join()._unreport()},J(_,x),x.prototype.when=function(t){I.enqueue(new T(t,this))},x.prototype._report=function(t){this.join()._report(t)},x.prototype._unreport=function(){this.join()._unreport()},J(b,g),J(_,q),q.prototype._state=1,q.prototype.fold=function(t,e,n,o){N(t,e,this,n,o)},q.prototype.when=function(t){H(t.fulfilled,this,t.receiver,t.resolver)};var Y=0;J(_,P),P.prototype._state=-1,P.prototype.fold=function(t,e,n,o){o.become(this)},P.prototype.when=function(t){"function"==typeof t.rejected&&this._unreport(),H(t.rejected,this,t.receiver,t.resolver)},P.prototype._report=function(t){I.afterQueue(new R(this,t))},P.prototype._unreport=function(){this.handled||(this.handled=!0,I.afterQueue(new C(this)))},P.prototype.fail=function(t){this.reported=!0,B("unhandledRejection",this),e.onFatalRejection(this,void 0===t?this.context:t)},R.prototype.run=function(){this.rejection.handled||this.rejection.reported||(this.rejection.reported=!0,B("unhandledRejection",this.rejection)||e.onPotentiallyUnhandledRejection(this.rejection,this.context))},C.prototype.run=function(){this.rejection.reported&&(B("rejectionHandled",this.rejection)||e.onPotentiallyUnhandledRejectionHandled(this.rejection))},e.createContext=e.enterContext=e.exitContext=e.onPotentiallyUnhandledRejection=e.onPotentiallyUnhandledRejectionHandled=e.onFatalRejection=D;var Z=new _,$=new e(_,Z);return T.prototype.run=function(){this.handler.join().when(this.continuation)},Q.prototype.run=function(){var t=this.handler.consumers;if(void 0!==t)for(var e,n=0;n<t.length;++n)e=t[n],M(e.progress,this.value,this.handler,e.receiver,e.resolver)},E.prototype.run=function(){function t(t){o.resolve(t)}function e(t){o.reject(t)}function n(t){o.notify(t)}var o=this.resolver;L(this._then,this.thenable,t,e,n)},k.prototype.fulfilled=function(t){this.f.call(this.c,this.z,t,this.to)},k.prototype.rejected=function(t){this.to.reject(t)},k.prototype.progress=function(t){this.to.notify(t)},e}})}("function"==typeof t&&t.amd?t:function(t){n.exports=t()})},{}]},{},[1])(1)});
 
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":44}],16:[function(require,module,exports){
+},{"_process":45}],17:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -796,7 +825,7 @@ origin = typeof location !== 'undefined' ? new UrlBuilder(location.href).parts()
 
 module.exports = UrlBuilder;
 
-},{"./mime/type/application/x-www-form-urlencoded":32,"./util/mixin":39}],17:[function(require,module,exports){
+},{"./mime/type/application/x-www-form-urlencoded":33,"./util/mixin":40}],18:[function(require,module,exports){
 /*
  * Copyright 2014-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -813,7 +842,7 @@ rest.setPlatformDefaultClient(browser);
 
 module.exports = rest;
 
-},{"./client/default":19,"./client/xhr":20}],18:[function(require,module,exports){
+},{"./client/default":20,"./client/xhr":21}],19:[function(require,module,exports){
 /*
  * Copyright 2014-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -869,7 +898,7 @@ module.exports = function client(impl, target) {
 
 };
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /*
  * Copyright 2014-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -987,7 +1016,7 @@ defaultClient.setPlatformDefaultClient = function setPlatformDefaultClient(clien
 
 module.exports = client(defaultClient);
 
-},{"../client":18}],20:[function(require,module,exports){
+},{"../client":19}],21:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1156,7 +1185,7 @@ module.exports = client(function xhr(request) {
 	});
 });
 
-},{"../client":18,"../util/normalizeHeaderName":40,"../util/responsePromise":41}],21:[function(require,module,exports){
+},{"../client":19,"../util/normalizeHeaderName":41,"../util/responsePromise":42}],22:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1303,7 +1332,7 @@ interceptor.ComplexRequest = ComplexRequest;
 
 module.exports = interceptor;
 
-},{"./client":18,"./client/default":19,"./util/mixin":39,"./util/responsePromise":41}],22:[function(require,module,exports){
+},{"./client":19,"./client/default":20,"./util/mixin":40,"./util/responsePromise":42}],23:[function(require,module,exports){
 /*
  * Copyright 2013-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1374,7 +1403,7 @@ module.exports = interceptor({
 	}
 });
 
-},{"../interceptor":21,"../util/mixin":39}],23:[function(require,module,exports){
+},{"../interceptor":22,"../util/mixin":40}],24:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1412,7 +1441,7 @@ module.exports = interceptor({
 	}
 });
 
-},{"../interceptor":21}],24:[function(require,module,exports){
+},{"../interceptor":22}],25:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1523,7 +1552,7 @@ module.exports = interceptor({
 	}
 });
 
-},{"../interceptor":21,"../mime":28,"../mime/registry":29,"../util/attempt":35}],25:[function(require,module,exports){
+},{"../interceptor":22,"../mime":29,"../mime/registry":30,"../util/attempt":36}],26:[function(require,module,exports){
 /*
  * Copyright 2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1572,7 +1601,7 @@ module.exports = interceptor({
 	}
 });
 
-},{"../UrlBuilder":16,"../interceptor":21}],26:[function(require,module,exports){
+},{"../UrlBuilder":17,"../interceptor":22}],27:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1623,7 +1652,7 @@ module.exports = interceptor({
 	}
 });
 
-},{"../UrlBuilder":16,"../interceptor":21}],27:[function(require,module,exports){
+},{"../UrlBuilder":17,"../interceptor":22}],28:[function(require,module,exports){
 /*
  * Copyright 2015-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1671,7 +1700,7 @@ module.exports = interceptor({
 	}
 });
 
-},{"../interceptor":21,"../util/mixin":39,"../util/uriTemplate":43}],28:[function(require,module,exports){
+},{"../interceptor":22,"../util/mixin":40,"../util/uriTemplate":44}],29:[function(require,module,exports){
 /*
 * Copyright 2014-2016 the original author or authors
 * @license MIT, see LICENSE.txt for details
@@ -1714,7 +1743,7 @@ module.exports = {
 	parse: parse
 };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1820,7 +1849,7 @@ registry.register('+json', registry.delegate('application/json'));
 
 module.exports = registry;
 
-},{"../mime":28,"./type/application/hal":30,"./type/application/json":31,"./type/application/x-www-form-urlencoded":32,"./type/multipart/form-data":33,"./type/text/plain":34}],30:[function(require,module,exports){
+},{"../mime":29,"./type/application/hal":31,"./type/application/json":32,"./type/application/x-www-form-urlencoded":33,"./type/multipart/form-data":34,"./type/text/plain":35}],31:[function(require,module,exports){
 /*
  * Copyright 2013-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1950,7 +1979,7 @@ module.exports = {
 
 };
 
-},{"../../../interceptor/pathPrefix":26,"../../../interceptor/template":27,"../../../util/find":37,"../../../util/lazyPromise":38,"../../../util/responsePromise":41}],31:[function(require,module,exports){
+},{"../../../interceptor/pathPrefix":27,"../../../interceptor/template":28,"../../../util/find":38,"../../../util/lazyPromise":39,"../../../util/responsePromise":42}],32:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -1989,7 +2018,7 @@ function createConverter(reviver, replacer) {
 
 module.exports = createConverter();
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2072,7 +2101,7 @@ module.exports = {
 
 };
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /*
  * Copyright 2014-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2138,7 +2167,7 @@ module.exports = {
 
 };
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2160,7 +2189,7 @@ module.exports = {
 
 };
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 /*
  * Copyright 2015-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2189,7 +2218,7 @@ function attempt(work) {
 
 module.exports = attempt;
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /*
  * Copyright (c) 2009 Nicholas C. Zakas. All rights reserved.
  *
@@ -2337,7 +2366,7 @@ module.exports = {
 	decode: base64Decode
 };
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 /*
  * Copyright 2013-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2370,7 +2399,7 @@ module.exports = {
 
 };
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 /*
  * Copyright 2013-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2418,7 +2447,7 @@ function lazyPromise(work) {
 
 module.exports = lazyPromise;
 
-},{"./attempt":35}],39:[function(require,module,exports){
+},{"./attempt":36}],40:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2457,7 +2486,7 @@ function mixin(dest /*, sources... */) {
 
 module.exports = mixin;
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 /*
  * Copyright 2012-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2487,7 +2516,7 @@ function normalizeHeaderName(name) {
 
 module.exports = normalizeHeaderName;
 
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 /*
  * Copyright 2014-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2623,7 +2652,7 @@ responsePromise.promise = function (func) {
 
 module.exports = responsePromise;
 
-},{"./normalizeHeaderName":40}],42:[function(require,module,exports){
+},{"./normalizeHeaderName":41}],43:[function(require,module,exports){
 /*
  * Copyright 2015-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2795,7 +2824,7 @@ module.exports = {
 
 };
 
-},{}],43:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 /*
  * Copyright 2015-2016 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -2957,7 +2986,7 @@ module.exports = {
 
 };
 
-},{"./uriEncoder":42}],44:[function(require,module,exports){
+},{"./uriEncoder":43}],45:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 

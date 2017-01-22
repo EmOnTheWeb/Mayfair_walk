@@ -1,32 +1,28 @@
-// var geocode = require('./geocode.js'); //returns a function that geocodes addresses, returns coordinates
+// Wait for device API libraries to load
+document.addEventListener("deviceready", onDeviceReady, false);
 
-// var coordinates = geocode([
-// 						'Piccadilly Circus Tube Station, London',
-// 						'Albany Piccadilly Mayfair London, W1J',
-// 						'Burlington Arcade Burlington House 0BG Piccadilly, London W1J'
-// 				  	]); //pass addresses and waypoints to the function
+function onDeviceReady() { 
 
-var processGPX = require('./process_gpx.js'); 
+	var processGPX = require('./process_gpx.js'); 
 
-processGPX('route.gpx', function (coordinates) {
-	
-	var getDirections = require('./directions.js'); 
-	
-	getDirections(coordinates,function(directions) {
+	var gpxFile = 'route.gpx'; 
 
-		// detect when person is at start 
-		var saveDirectionInfo = require('./save_directions.js')
-		saveDirectionInfo(directions); 
+	processGPX(gpxFile, function (coordinates) {
+		
+		var getDirections = require('./directions.js'); 
+		
+		getDirections(coordinates,function(directions) {
 
+			// detect when person is at start 
+			var saveDirectionInfo = require('./save_directions.js')
+			stepsData = saveDirectionInfo(directions,gpxFile); 
+			
+			var listenForCoordinates = require('./track_coordinates.js'); //coordinates are in [longitude, latitude] for google maps lat long goes the other way!
+			listenForCoordinates(stepsData); 
+
+		}); 
+		// var turn_by_turn = getDirections(coordinates);
 	}); 
-	// var turn_by_turn = getDirections(coordinates);
-}); 
+}
 
 
-
-
-
-
-// var get_directions = require('directions.js'); //returns a function that returns turn by turn directions
-
-// var turn_by_turn = get_directions(coordinates); //get turn by turn directions with geocoded coordinates; 
