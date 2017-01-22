@@ -15,9 +15,8 @@ processGPX('route.gpx', function (coordinates) {
 	getDirections(coordinates,function(directions) {
 
 		// detect when person is at start 
-
-
-		console.log(directions); 
+		var saveDirectionInfo = require('./save_directions.js')
+		saveDirectionInfo(directions); 
 
 	}); 
 	// var turn_by_turn = getDirections(coordinates);
