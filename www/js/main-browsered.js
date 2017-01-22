@@ -138,6 +138,12 @@ module.exports = function(coordinatesData) {
 
             var instructionData = nearInstructionCoordinate(lat,long, coordinatesData); 
 
+            if(instructionData !== false) {
+
+    			console.log('play out instruction now'); 
+    			console.log(instructionData); 
+
+            }
            // var waypoint = isClose(lat,long); //returns false if not close to anywhere, or waypoint number its closest to if close to a waypoint.
            // if(waypoint !== false) {
            //  //play corresponding audio 
@@ -168,10 +174,10 @@ function nearInstructionCoordinate(lat,long, instructionPoints) { //compare lat 
 		//round to 4 digits so if your more roughly nearby ... (this possibly needs more thinking about)
 		instructionCoordinateLat = instructionCoordinateLat.toFixed(4); 
 		instructionCoordinateLong = instructionCoordinateLong.toFixed(4); 
-		// console.log('device latitude is' + typeof lat); 
-		// console.log('device longitude is' + lonCoordinate
-		// console.log('point lat is' + typeof instructionPointLat); 
-		// console.log('point long is' + instructionPointLong); 
+		// console.log('device latitude is' + lat); 
+		// console.log('device longitude is' + long); 
+		console.log('point lat is' + instructionCoordinateLat); 
+		console.log('point long is' + instructionCoordinateLong); 
 		
 		if(lat === instructionCoordinateLat && long === instructionCoordinateLong) { //all the coordinates are strings at this point ... 
 			return instructionPoints[i]; 
