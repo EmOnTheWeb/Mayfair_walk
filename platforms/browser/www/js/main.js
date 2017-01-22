@@ -2,7 +2,7 @@
 document.addEventListener("deviceready", onDeviceReady, false);
 
 function onDeviceReady() { 
-
+	
 	var processGPX = require('./process_gpx.js'); 
 
 	var gpxFile = 'route.gpx'; 
