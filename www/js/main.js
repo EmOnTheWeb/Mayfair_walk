@@ -8,11 +8,14 @@
 
 var processGPX = require('./process_gpx.js'); 
 
-processGPX('house_to_tube.gpx', function (coordinates) {
+processGPX('route.gpx', function (coordinates) {
 	
 	var getDirections = require('./directions.js'); 
 	
 	getDirections(coordinates,function(directions) {
+
+		// detect when person is at start 
+
 
 		console.log(directions); 
 
