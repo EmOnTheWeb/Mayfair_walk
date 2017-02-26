@@ -1,5 +1,5 @@
 module.exports = function(coordinatesData) {
-
+  var time = 0; 
 	//start tracking
 	var watch_id= navigator.geolocation.watchPosition(
 
@@ -8,21 +8,25 @@ module.exports = function(coordinatesData) {
             //check against route directions
             var lat = position.coords.latitude; 
             var long = position.coords.longitude; 
-           	// console.log('latitude is ' + lat); 
-           	// console.log('longitude is' + long); 
-
+           	//log coordinates. not more frequently than 30 seconds
+            var currentTime= Date.now(); 
+            if(time===0) {
+                time = currentTime; 
+                document.getElementById('log-coordinates').innerHTML += "<p class='log'>Current latitude is "+lat+" and current longitude is "+long+"</p>"; 
+            } else {
+                if(currentTime-time > 30000) { //30 seconds
+                    time=currentTime; 
+                    document.getElementById('log-coordinates').innerHTML += "<p class='log'>Current latitude is "+lat+" and current longitude is "+long+"</p>"; 
+                }
+            }
            	// console.log(coordinatesData); 
             //round numbers to 5 decimals 
             lat = lat.toFixed(4); 
             long = long.toFixed(4); 
-
+            //log instructions
             var instructionData = nearInstructionCoordinate(lat,long, coordinatesData); 
-
             if(instructionData !== false) {
-
-    			console.log('play out instruction now'); 
-    			console.log(instructionData); 
-
+                document.getElementById('log-instructions').innerHTML += "<div class='instruction'>"+instructionData.instruction+"</div>"; 
             }
            // var waypoint = isClose(lat,long); //returns false if not close to anywhere, or waypoint number its closest to if close to a waypoint.
            // if(waypoint !== false) {
