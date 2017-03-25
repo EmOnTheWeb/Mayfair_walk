@@ -3,6 +3,10 @@ document.addEventListener("deviceready", onDeviceReady, false);
 
 function onDeviceReady() { 
 	
+	//read existing gpx files into select menu 
+	window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFileSystemSuccess, null);
+	//end
+
 	var processGPX = require('./process_gpx.js'); 
 
 	var gpxFile = 'route.gpx'; 
@@ -24,5 +28,16 @@ function onDeviceReady() {
 		// var turn_by_turn = getDirections(coordinates);
 	}); 
 }
+
+function onFileSystemSuccess(fileSystem) {
+	fileSystem.root.getDirectory("gpx", {create: false, exclusive: false}, getDirSuccess, null);  
+	// fileSystem.getDirectory("gpx", {create: false, exclusive: false}, getDirSuccess, null);  
+}
+
+function getDirSuccess(dirEntry) {
+	console.log(dirEntry); 
+	console.log('hi'); 
+}
+
 
 
